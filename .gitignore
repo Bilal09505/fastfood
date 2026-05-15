@@ -1,0 +1,118 @@
+# =============================================
+# FastFood Dashboard — .gitignore
+# Angular 19 + NestJS + PostgreSQL (Prisma)
+# =============================================
+
+
+# ── Node ─────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+
+# ── Environment / Secrets ────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+# Keep the example — it has no real secrets
+!.env.example
+
+
+# ── NestJS / Backend ─────────────────────────
+apps/api/dist/
+apps/api/build/
+apps/api/.nest/
+apps/api/coverage/
+
+
+# ── Prisma ────────────────────────────────────
+# Generated client — always re-generated via `prisma generate`
+apps/api/node_modules/.prisma/
+# Prisma binary engines (large, platform-specific)
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+
+
+# ── Angular / Frontend ───────────────────────
+apps/web/dist/
+apps/web/.angular/
+apps/web/coverage/
+apps/web/.sass-cache/
+apps/web/connect.lock
+apps/web/libpeerconnection.log
+testem.log
+
+
+# ── TypeScript ───────────────────────────────
+*.js.map
+*.d.ts.map
+# Incremental build cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+
+# ── Logs ─────────────────────────────────────
+logs/
+*.log
+lerna-debug.log*
+
+
+# ── OS ───────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+
+# ── IDE / Editors ────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+
+# ── Docker ───────────────────────────────────
+# Don't ignore docker-compose.yml — it's needed
+# Ignore local override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+
+# ── Testing ──────────────────────────────────
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+e2e/screenshots/
+
+
+# ── Misc ─────────────────────────────────────
+.cache/
+.tmp/
+tmp/
+temp/
+*.bak
+*.orig
+.eslintcache
+.stylelintcache

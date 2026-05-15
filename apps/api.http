@@ -1,0 +1,216 @@
+### FastFood Dashboard API Tests
+### Base Configuration
+@baseUrl = http://localhost:3000/api
+@contentType = application/json
+
+### ========================================
+### AUTH
+### ========================================
+
+### Login (Admin)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@fastfood.com",
+  "password": "admin123"
+}
+
+### Get Current User (me)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Refresh Token
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{login.response.body.refreshToken}}"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### ========================================
+### USERS (ADMIN only)
+### ========================================
+
+### Get All Users
+GET {{baseUrl}}/users
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create New User
+POST {{baseUrl}}/users
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "email": "salesman@fastfood.com",
+  "password": "password123",
+  "name": "John Sales",
+  "role": "SALESMAN"
+}
+
+### ========================================
+### CLIENTS
+### ========================================
+
+### Get All Clients
+GET {{baseUrl}}/clients
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create Client
+POST {{baseUrl}}/clients
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Test Customer",
+  "phone": "03001234567",
+  "address": "Narowal, Punjab"
+}
+
+### ========================================
+### CATEGORIES
+### ========================================
+
+### Get All Categories
+GET {{baseUrl}}/categories
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create Category
+POST {{baseUrl}}/categories
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Burgers",
+  "description": "All kinds of burgers"
+}
+
+### ========================================
+### MENU ITEMS
+### ========================================
+
+### Get All Menu Items
+GET {{baseUrl}}/menu-items
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create Menu Item
+POST {{baseUrl}}/menu-items
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Classic Beef Burger",
+  "categoryId": 1,
+  "price": 450,
+  "description": "Delicious beef burger",
+  "recipe": [
+    {"materialId": 1, "quantity": 1},
+    {"materialId": 2, "quantity": 2}
+  ]
+}
+
+### ========================================
+### MATERIALS / INVENTORY
+### ========================================
+
+### Get All Materials
+GET {{baseUrl}}/materials
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create Material
+POST {{baseUrl}}/materials
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Beef Patty",
+  "unit": "piece",
+  "currentStock": 100,
+  "minStock": 20
+}
+
+### ========================================
+### ORDERS
+### ========================================
+
+### Get All Orders
+GET {{baseUrl}}/orders
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Create New Order
+POST {{baseUrl}}/orders
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "clientId": 1,
+  "items": [
+    {
+      "menuItemId": 1,
+      "quantity": 2,
+      "specialInstructions": "No onion"
+    }
+  ],
+  "totalAmount": 900
+}
+
+### ========================================
+### PURCHASES (Supplier)
+### ========================================
+
+### Get Purchases
+GET {{baseUrl}}/purchases
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Record Purchase
+POST {{baseUrl}}/purchases
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "materialId": 1,
+  "quantity": 50,
+  "unitPrice": 120,
+  "supplierNotes": "New stock"
+}
+
+### ========================================
+### EXPENSES (ADMIN)
+### ========================================
+
+### Get All Expenses
+GET {{baseUrl}}/expenses
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Add Expense
+POST {{baseUrl}}/expenses
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: {{contentType}}
+
+{
+  "description": "Electricity Bill",
+  "amount": 8500,
+  "category": "Utilities"
+}
+
+### ========================================
+### DASHBOARD
+### ========================================
+
+### Admin Dashboard
+GET {{baseUrl}}/dashboard/admin
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Salesman Dashboard
+GET {{baseUrl}}/dashboard/salesman
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Maker Dashboard
+GET {{baseUrl}}/dashboard/maker
+Authorization: Bearer {{login.response.body.accessToken}}
