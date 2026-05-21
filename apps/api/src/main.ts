@@ -17,6 +17,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:4200',
       configService.get<string>('frontendUrl'),
+      /https:\/\/.*\.vercel\.app$/,
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
