@@ -16,6 +16,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { DealsModule } from './deals/deals.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     PurchasesModule,
     ExpensesModule,
     DashboardModule,
+    DealsModule
   ],
   providers: [
     // Apply exception filter globally

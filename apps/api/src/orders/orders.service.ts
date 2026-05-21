@@ -1,4 +1,3 @@
-// apps/api/src/orders/orders.service.ts
 import {
   Injectable,
   NotFoundException,
@@ -9,17 +8,15 @@ import { PrismaService } from '../prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus, Role } from '@prisma/client';
 
-// Valid status transitions
 const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  PENDING: [OrderStatus.ASSIGNED, OrderStatus.CANCELLED],
-  ASSIGNED: [OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED],
+  PENDING:     [OrderStatus.ASSIGNED, OrderStatus.CANCELLED],
+  ASSIGNED:    [OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED],
   IN_PROGRESS: [OrderStatus.READY],
-  READY: [OrderStatus.COMPLETED],
-  COMPLETED: [],
-  CANCELLED: [],
+  READY:       [OrderStatus.COMPLETED],
+  COMPLETED:   [],
+  CANCELLED:   [],
 };
 
-// Status transitions a MAKER is allowed to make
 const MAKER_TRANSITIONS = [
   OrderStatus.IN_PROGRESS,
   OrderStatus.READY,
@@ -34,10 +31,10 @@ export class OrdersService {
     const where: any = {};
 
     if (userRole === Role.SALESMAN) where.salesmanId = userId;
-    if (userRole === Role.MAKER) where.makerId = userId;
+    if (userRole === Role.MAKER)    where.makerId    = userId;
     if (status) where.status = status;
     if (date) {
-      const d = new Date(date);
+      const d    = new Date(date);
       const next = new Date(d);
       next.setDate(next.getDate() + 1);
       where.createdAt = { gte: d, lt: next };
@@ -47,8 +44,9 @@ export class OrdersService {
       where,
       include: {
         salesman: { select: { id: true, name: true } },
-        maker: { select: { id: true, name: true } },
-        client: { select: { id: true, name: true } },
+        maker:    { select: { id: true, name: true } },
+        client:   { select: { id: true, name: true } },
+        deal:     { select: { id: true, name: true, price: true } },
         items: {
           include: { menuItem: { select: { id: true, name: true } } },
         },
@@ -62,8 +60,9 @@ export class OrdersService {
       where: { id },
       include: {
         salesman: { select: { id: true, name: true } },
-        maker: { select: { id: true, name: true } },
-        client: true,
+        maker:    { select: { id: true, name: true } },
+        client:   true,
+        deal:     true,
         items: {
           include: {
             menuItem: {
@@ -76,54 +75,99 @@ export class OrdersService {
 
     if (!order) throw new NotFoundException(`Order ${id} not found`);
 
-    if (userRole === Role.SALESMAN && order.salesmanId !== userId) {
+    if (userRole === Role.SALESMAN && order.salesmanId !== userId)
       throw new ForbiddenException('Access denied');
-    }
-    if (userRole === Role.MAKER && order.makerId !== userId) {
+    if (userRole === Role.MAKER && order.makerId !== userId)
       throw new ForbiddenException('Access denied');
-    }
 
     return order;
   }
 
   async create(dto: CreateOrderDto, salesmanId: string) {
-    if (!dto.items || dto.items.length === 0) {
-      throw new BadRequestException('Order must have at least one item');
+    // must provide either a deal OR items — not neither
+    if (!dto.dealId && (!dto.items || dto.items.length === 0)) {
+      throw new BadRequestException('Provide either a dealId or at least one item.');
     }
 
-    // Fetch menu items to get current prices
+    // ── DEAL ORDER ──────────────────────────────────────────────────────────
+    if (dto.dealId) {
+      const deal = await this.prisma.deal.findUnique({
+        where: { id: dto.dealId },
+        include: {
+          items: {
+            include: {
+              // need materials to validate stock later on completion
+              menuItem: {
+                include: { materials: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!deal)          throw new NotFoundException('Deal not found.');
+      if (!deal.isActive) throw new BadRequestException('This deal is no longer available.');
+
+      return this.prisma.order.create({
+        data: {
+          salesmanId,
+          clientId:    dto.clientId ?? null,
+          dealId:      deal.id,
+          notes:       dto.notes,
+          totalAmount: deal.price,  // flat deal price — not sum of items
+          status:      OrderStatus.PENDING,
+          items: {
+            create: deal.items.map((dealItem) => ({
+              menuItemId: dealItem.menuItemId,
+              quantity:   dealItem.quantity,
+              unitPrice:  0,  // price lives on the deal, not individual items
+            })),
+          },
+        },
+        include: {
+          items:  { include: { menuItem: { select: { id: true, name: true } } } },
+          client: { select: { id: true, name: true } },
+          deal:   { select: { id: true, name: true, price: true } },
+        },
+      });
+    }
+
+    // ── REGULAR ORDER ───────────────────────────────────────────────────────
+    // fetch prices from DB — never trust prices from the frontend
     const menuItemIds = dto.items.map((i) => i.menuItemId);
-    const menuItems = await this.prisma.menuItem.findMany({
+    const menuItems   = await this.prisma.menuItem.findMany({
       where: { id: { in: menuItemIds }, isAvailable: true },
     });
 
     if (menuItems.length !== menuItemIds.length) {
-      throw new BadRequestException('One or more menu items are unavailable or do not exist');
+      throw new BadRequestException(
+        'One or more menu items are unavailable or do not exist.',
+      );
     }
 
     const priceMap = new Map(menuItems.map((m) => [m.id, Number(m.price)]));
 
     const totalAmount = dto.items.reduce((sum, item) => {
-      return sum + (Number(priceMap.get(item.menuItemId)) * item.quantity);
+      return sum + priceMap.get(item.menuItemId) * item.quantity;
     }, 0);
 
     return this.prisma.order.create({
       data: {
         salesmanId,
-        clientId: dto.clientId,
-        notes: dto.notes,
+        clientId: dto.clientId ?? null,
+        notes:    dto.notes,
         totalAmount,
-        status: OrderStatus.PENDING,
+        status:   OrderStatus.PENDING,
         items: {
           create: dto.items.map((item) => ({
             menuItemId: item.menuItemId,
-            quantity: item.quantity,
-            unitPrice: priceMap.get(item.menuItemId),
+            quantity:   item.quantity,
+            unitPrice:  priceMap.get(item.menuItemId),
           })),
         },
       },
       include: {
-        items: { include: { menuItem: { select: { id: true, name: true } } } },
+        items:  { include: { menuItem: { select: { id: true, name: true } } } },
         client: { select: { id: true, name: true } },
       },
     });
@@ -143,26 +187,25 @@ export class OrdersService {
 
     return this.prisma.order.update({
       where: { id: orderId },
-      data: { makerId, status: OrderStatus.ASSIGNED },
+      data:  { makerId, status: OrderStatus.ASSIGNED },
       include: { maker: { select: { id: true, name: true } } },
     });
   }
 
   async updateStatus(
-    orderId: string,
+    orderId:  string,
     newStatus: OrderStatus,
-    userId: string,
+    userId:   string,
     userRole: Role,
   ) {
     const order = await this.prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException(`Order ${orderId} not found`);
 
-    // Maker can only update their own orders
     if (userRole === Role.MAKER) {
-      if (order.makerId !== userId) throw new ForbiddenException('Not your order');
-      if (!MAKER_TRANSITIONS.includes(newStatus as any)) {
+      if (order.makerId !== userId)
+        throw new ForbiddenException('Not your order');
+      if (!MAKER_TRANSITIONS.includes(newStatus as any))
         throw new BadRequestException(`Maker cannot set status to ${newStatus}`);
-      }
     }
 
     const allowed = ALLOWED_TRANSITIONS[order.status];
@@ -172,14 +215,13 @@ export class OrdersService {
       );
     }
 
-    // If completing, deduct stock in a transaction
     if (newStatus === OrderStatus.COMPLETED) {
-      return this.completeOrder(order.id);
+      return this.completeOrder(orderId);
     }
 
     return this.prisma.order.update({
       where: { id: orderId },
-      data: { status: newStatus },
+      data:  { status: newStatus },
     });
   }
 
@@ -188,20 +230,20 @@ export class OrdersService {
     if (!order) throw new NotFoundException(`Order ${orderId} not found`);
 
     if (userRole === Role.SALESMAN) {
-      if (order.salesmanId !== userId) throw new ForbiddenException('Not your order');
-      if (order.status !== OrderStatus.PENDING) {
+      if (order.salesmanId !== userId)
+        throw new ForbiddenException('Not your order');
+      if (order.status !== OrderStatus.PENDING)
         throw new BadRequestException('Salesman can only cancel PENDING orders');
-      }
     }
 
     return this.prisma.order.update({
       where: { id: orderId },
-      data: { status: OrderStatus.CANCELLED },
+      data:  { status: OrderStatus.CANCELLED },
     });
   }
 
   async getStats(userId: string, userRole: Role) {
-    const today = new Date();
+    const today    = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -214,29 +256,33 @@ export class OrdersService {
         this.prisma.order.aggregate({
           where: {
             salesmanId: userId,
-            status: OrderStatus.COMPLETED,
-            createdAt: { gte: new Date(today.getFullYear(), today.getMonth(), 1) },
+            status:     OrderStatus.COMPLETED,
+            createdAt:  { gte: new Date(today.getFullYear(), today.getMonth(), 1) },
           },
-          _sum: { totalAmount: true },
+          _sum:   { totalAmount: true },
           _count: true,
         }),
       ]);
-      return { todayOrders, monthSales: monthOrders._sum.totalAmount, monthCount: monthOrders._count };
+      return {
+        todayOrders,
+        monthSales: monthOrders._sum.totalAmount,
+        monthCount: monthOrders._count,
+      };
     }
 
     if (userRole === Role.MAKER) {
       const [todayCount, monthCount] = await Promise.all([
         this.prisma.order.count({
           where: {
-            makerId: userId,
-            status: OrderStatus.COMPLETED,
+            makerId:   userId,
+            status:    OrderStatus.COMPLETED,
             updatedAt: { gte: today, lt: tomorrow },
           },
         }),
         this.prisma.order.count({
           where: {
-            makerId: userId,
-            status: OrderStatus.COMPLETED,
+            makerId:   userId,
+            status:    OrderStatus.COMPLETED,
             updatedAt: { gte: new Date(today.getFullYear(), today.getMonth(), 1) },
           },
         }),
@@ -247,7 +293,7 @@ export class OrdersService {
     return {};
   }
 
-  // ─── Private: complete order + atomic stock deduction ───────────────
+  // ── Private: complete order + atomic stock deduction ──────────────────────
 
   private async completeOrder(orderId: string) {
     return this.prisma.$transaction(async (tx) => {
@@ -264,26 +310,35 @@ export class OrdersService {
         },
       });
 
-      // Deduct materials
+      if (!order) throw new NotFoundException(`Order ${orderId} not found`);
+
+      // works for both deal orders and regular orders —
+      // deal items are stored in order_items at creation time
+      // so the deduction logic is identical in both cases
       for (const orderItem of order.items) {
         for (const recipe of orderItem.menuItem.materials) {
           const deductAmount = Number(recipe.quantityNeeded) * orderItem.quantity;
 
+          const material = await tx.material.findUnique({
+            where: { id: recipe.materialId },
+          });
+
+          if (!material) continue;
+
+          // warn but don't block if stock goes negative —
+          // you can change this to throw if you want strict enforcement
+          const newStock = Number(material.currentStock) - deductAmount;
+
           await tx.material.update({
             where: { id: recipe.materialId },
-            data: {
-              currentStock: {
-                decrement: deductAmount,
-              },
-            },
+            data:  { currentStock: newStock },
           });
         }
       }
 
-      // Mark order as completed
       return tx.order.update({
         where: { id: orderId },
-        data: { status: OrderStatus.COMPLETED },
+        data:  { status: OrderStatus.COMPLETED },
       });
     });
   }

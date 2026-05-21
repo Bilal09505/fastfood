@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import type {
   User, Client, Category, MenuItem, Material, Order, Purchase,
   Expense, AdminDashboard, SalesmanDashboard, MakerDashboard, SupplierDashboard,
-  OrderStatus, ExpenseCategory
+  OrderStatus, ExpenseCategory,
+  Deal
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +34,7 @@ export class ApiService {
   // ── Categories ───────────────────────────────────────────────────────
   getCategories()           { return this.http.get<Category[]>(`${this.base}/categories`); }
   createCategory(data: any) { return this.http.post<Category>(`${this.base}/categories`, data); }
+  updateCategory(id: string, d: any) { return this.http.patch<Category>(`${this.base}/categories/${id}`, d); }
   deleteCategory(id: string){ return this.http.delete(`${this.base}/categories/${id}`); }
 
   // ── Menu Items ───────────────────────────────────────────────────────
@@ -95,4 +97,25 @@ export class ApiService {
   getSalesmanDashboard() { return this.http.get<SalesmanDashboard>(`${this.base}/dashboard/salesman`); }
   getMakerDashboard()    { return this.http.get<MakerDashboard>(`${this.base}/dashboard/maker`); }
   getSupplierDashboard() { return this.http.get<SupplierDashboard>(`${this.base}/dashboard/supplier`); }
+
+  // ── Deals ──────────────────────────────────────────────────────────────
+getDeals() {
+  return this.http.get<Deal[]>(`${this.base}/deals`);
+}
+
+getDeal(id: string) {
+  return this.http.get<Deal>(`${this.base}/deals/${id}`);
+}
+
+createDeal(data: any) {
+  return this.http.post<Deal>(`${this.base}/deals`, data);
+}
+
+updateDeal(id: string, data: any) {
+  return this.http.patch<Deal>(`${this.base}/deals/${id}`, data);
+}
+
+deactivateDeal(id: string) {
+  return this.http.patch<Deal>(`${this.base}/deals/${id}/deactivate`, {});
+}
 }

@@ -103,6 +103,7 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+  deal?: Deal;
 }
 
 // ── Purchases ────────────────────────────────────────────────────────────────
@@ -164,4 +165,22 @@ export interface SupplierDashboard {
   allMaterials: Material[];
   recentPurchases: Purchase[];
   thisMonth: { totalSpent: number; purchaseCount: number };
+}
+
+export interface DealItem {
+  id?:        string;
+  quantity:   number;
+  menuItemId: string;
+  menuItem?:  MenuItem;  
+}
+
+export interface Deal {
+  id:           string;
+  name:         string;
+  description?: string;
+  price:        number;
+  isActive:     boolean;
+  createdAt?:   string;
+  updatedAt?:   string;
+  items:        DealItem[];
 }

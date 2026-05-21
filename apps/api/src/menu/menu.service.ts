@@ -5,13 +5,13 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from './dto/create-category.dto';
 import { CreateMenuItemDto } from './dto/create-category.dto';
 import { SetRecipeDto } from './dto/create-category.dto';
 
 @Injectable()
 export class MenuService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ─── Categories ──────────────────────────────────────────────────────
 
@@ -29,6 +29,13 @@ export class MenuService {
     if (existing) throw new ConflictException('Category already exists');
 
     return this.prisma.category.create({ data: { name: dto.name } });
+  }
+
+  async updateCategory(id: string, dto: UpdateCategoryDto) {
+    return this.prisma.category.update({
+      where: { id },
+      data: dto,
+    });
   }
 
   async deleteCategory(id: string) {

@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
-import { CreateCategoryDto, CreateMenuItemDto, SetRecipeDto } from './dto/create-category.dto';
+import { CreateCategoryDto, CreateMenuItemDto, SetRecipeDto, UpdateCategoryDto } from './dto/create-category.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -19,7 +19,7 @@ import { Role } from '@prisma/client';
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class MenuController {
-  constructor(private menuService: MenuService) {}
+  constructor(private menuService: MenuService) { }
 
   // ─── Categories ───────────────────────────────────────────────────────
 
@@ -33,6 +33,13 @@ export class MenuController {
   @Roles(Role.ADMIN)
   createCategory(@Body() dto: CreateCategoryDto) {
     return this.menuService.createCategory(dto);
+  }
+
+  @Patch('categories/:id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+    return this.menuService.updateCategory(id, dto);
   }
 
   @Delete('categories/:id')

@@ -63,6 +63,7 @@ export class SidebarComponent {
     { label: 'Dashboard',  route: '/dashboard',  icon: '&#9732;',  roles: ['ADMIN','SALESMAN','MAKER','SUPPLIER'] },
     { label: 'Workers',    route: '/workers',    icon: '&#128101;', roles: ['ADMIN'] },
     { label: 'Clients',    route: '/clients',    icon: '&#128100;', roles: ['ADMIN','SALESMAN'] },
+    { label: 'Categories', route: '/categories', icon: '&#128229;', roles: ['ADMIN'] },
     { label: 'Menu',       route: '/menu',       icon: '&#127828;', roles: ['ADMIN','SALESMAN','MAKER'] },
     { label: 'Materials',  route: '/materials',  icon: '&#128230;', roles: ['ADMIN','SUPPLIER'] },
     { label: 'Orders',     route: '/orders',     icon: '&#128203;', roles: ['ADMIN','SALESMAN','MAKER'] },

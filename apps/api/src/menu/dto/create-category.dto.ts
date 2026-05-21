@@ -2,11 +2,13 @@
 import { IsBoolean, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IsArray, ValidateNested } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types/dist/partial-type.helper';
 
 export class CreateCategoryDto {
   @IsString()
   name: string;
 }
+export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {}
 
 export class CreateMenuItemDto {
   @IsString()
