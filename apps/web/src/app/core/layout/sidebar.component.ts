@@ -1,7 +1,7 @@
 // src/app/core/layout/sidebar.component.ts
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 
 interface NavItem {
@@ -35,7 +35,7 @@ interface NavItem {
           <a [routerLink]="item.route"
              routerLinkActive="active"
              class="nav-item">
-            <span class="text-lg w-5 text-center" [innerHTML]="item.icon"></span>
+            <span class="text-lg w-5 text-center leading-none">{{ item.icon }}</span>
             <span>{{ item.label }}</span>
           </a>
         </ng-container>
@@ -60,16 +60,17 @@ export class SidebarComponent {
   auth = inject(AuthService);
 
   private allNav: NavItem[] = [
-    { label: 'Dashboard',  route: '/dashboard',  icon: '&#9732;',  roles: ['ADMIN','SALESMAN','MAKER','SUPPLIER'] },
-    { label: 'Workers',    route: '/workers',    icon: '&#128101;', roles: ['ADMIN'] },
-    { label: 'Clients',    route: '/clients',    icon: '&#128100;', roles: ['ADMIN','SALESMAN'] },
-    { label: 'Categories', route: '/categories', icon: '&#128229;', roles: ['ADMIN'] },
-    { label: 'Menu',       route: '/menu',       icon: '&#127828;', roles: ['ADMIN','SALESMAN','MAKER'] },
-    { label: 'Materials',  route: '/materials',  icon: '&#128230;', roles: ['ADMIN','SUPPLIER'] },
-    { label: 'Orders',     route: '/orders',     icon: '&#128203;', roles: ['ADMIN','SALESMAN','MAKER'] },
-    { label: 'Purchases',  route: '/purchases',  icon: '&#128722;', roles: ['ADMIN','SUPPLIER'] },
-    { label: 'Expenses',   route: '/expenses',   icon: '&#128181;', roles: ['ADMIN'] },
-    { label: 'Reports',    route: '/reports',    icon: '&#128202;', roles: ['ADMIN'] },
+    { label: 'Dashboard',  route: '/dashboard',  icon: '📊', roles: ['ADMIN','SALESMAN','MAKER','SUPPLIER'] },
+    { label: 'Workers',    route: '/workers',    icon: '👥', roles: ['ADMIN'] },
+    { label: 'Clients',    route: '/clients',    icon: '👤', roles: ['ADMIN','SALESMAN'] },
+    { label: 'Categories', route: '/categories', icon: '📁', roles: ['ADMIN'] },
+    { label: 'Menu',       route: '/menu',       icon: '🍔', roles: ['ADMIN','SALESMAN'] },
+    { label: 'Deals',      route: '/deals',      icon: '🏷️',  roles: ['ADMIN','SALESMAN'] },
+    { label: 'Materials',  route: '/materials',  icon: '📦', roles: ['ADMIN','SUPPLIER'] },
+    { label: 'Orders',     route: '/orders',     icon: '📋', roles: ['ADMIN','SALESMAN','MAKER'] },
+    { label: 'Purchases',  route: '/purchases',  icon: '🛒', roles: ['ADMIN','SUPPLIER'] },
+    { label: 'Expenses',   route: '/expenses',   icon: '💵', roles: ['ADMIN'] },
+    { label: 'Reports',    route: '/reports',    icon: '📈', roles: ['ADMIN'] },
   ];
 
   visibleNav = signal(this.allNav.filter(n =>
