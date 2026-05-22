@@ -12,8 +12,8 @@ import { TopbarComponent } from './topbar.component';
   template: `
     <div class="min-h-screen bg-gray-50">
       <app-sidebar />
-       <app-topbar />
-      <main class="ml-60 pt-16 min-h-screen">
+      <app-topbar />
+      <main class="ml-14 md:ml-60 pt-16 min-h-screen">
         <div class="p-6">
           <router-outlet />
         </div>
