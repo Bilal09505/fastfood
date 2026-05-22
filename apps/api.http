@@ -1,6 +1,6 @@
 ### FastFood Dashboard API Tests
 ### Base Configuration
-@baseUrl = fastfood-production-8390.up.railway.app/api
+@baseUrl = https://fastfood-production-8390.up.railway.app/api
 @contentType = application/json
 
 ### ========================================
