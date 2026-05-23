@@ -4,7 +4,19 @@
 
 ---
 
-## Quick Start
+## 🌐 Live Demo
+
+| Layer | Platform | URL |
+|---|---|---|
+| **Frontend** | Vercel | [fastfood-qivlbj7hx-bilals-projects-89c900e7.vercel.app](https://fastfood-qivlbj7hx-bilals-projects-89c900e7.vercel.app) |
+| **Backend API** | Railway | *(add your Railway URL here)* |
+| **Database** | Supabase | *(managed — no public URL)* |
+
+> ⚠️ This is a **testing deployment**. Data may be reset at any time.
+
+---
+
+## Quick Start (Local)
 
 ### 1. Prerequisites
 - Node.js 18+
@@ -59,6 +71,47 @@ cd apps/api
 npm run start:dev
 # API running at http://localhost:3000/api
 ```
+
+---
+
+## ☁️ Deployment Guide
+
+### Frontend → Vercel
+
+1. Push your Angular project to GitHub
+2. Import repo in [vercel.com](https://vercel.com)
+3. Set build settings:
+   - **Framework:** Angular
+   - **Build command:** `ng build --configuration production`
+   - **Output directory:** `dist/web/browser`
+4. Add environment variable:
+   - `NEXT_PUBLIC_API_URL` = your Railway API URL
+5. Deploy
+
+### Backend (NestJS) → Railway
+
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select your repo, set root directory to `apps/api`
+3. Add environment variables:
+   ```
+   DATABASE_URL=<your Supabase connection string>
+   JWT_SECRET=<your secret>
+   JWT_REFRESH_SECRET=<your refresh secret>
+   NODE_ENV=production
+   ```
+4. Railway auto-detects Node.js and runs `npm run start:prod`
+5. Copy the generated Railway URL → paste into your Vercel `API_URL` env var
+
+### Database → Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to **Settings → Database → Connection string (URI)**
+3. Copy the connection string and set it as `DATABASE_URL` in Railway
+4. Run migrations against Supabase:
+   ```bash
+   DATABASE_URL=<supabase_url> npx prisma migrate deploy
+   DATABASE_URL=<supabase_url> npx ts-node prisma/seed.ts
+   ```
 
 ---
 
@@ -128,7 +181,7 @@ fastfood-dashboard/
 │   │   └── prisma/
 │   │       ├── schema.prisma   ← Full database schema
 │   │       └── seed.ts         ← Admin user + sample data
-│   └── web/                    ← Angular frontend (next phase)
+│   └── web/                    ← Angular frontend
 └── libs/
     └── shared-types/           ← Shared TS interfaces
 ```
